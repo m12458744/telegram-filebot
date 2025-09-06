@@ -38,3 +38,4 @@ bot.on('message', async (ctx) => {
     ctx.reply('⚠️ لطفاً فقط فایل ارسال کنید یا فوروارد نمایید.');
   }
 });
+module.exports = bot;
