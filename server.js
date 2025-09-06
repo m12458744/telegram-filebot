@@ -1,17 +1,13 @@
-// server.js
-require('dotenv').config();
-const express = require('express');
-const bot = require('./bot'); // دریافت شیء Telegraf
+const bot = require('./bot');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+bot.launch()
+  .then(() => {
+    console.log('ربات در حال اجراست...');
+  })
+  .catch((err) => {
+    console.error('خطا در راه‌اندازی ربات:', err);
+  });
 
-bot.launch(); // ربات راه‌اندازی میشه
-
-app.get('/', (req, res) => {
-  res.send('🤖 ربات فعال است!');
-});
-
-app.listen(PORT, () => {
-  console.log(`🌐 سرور روی پورت ${PORT} در حال اجراست.`);
-});
+// Optional: این خط برای مدیریت سیگنال‌های توقف و بسته شدن ربات هست
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
