@@ -1,18 +1,16 @@
-bot.on(['photo', 'video', 'document'], async (ctx) => {
-  let fileId;
+const express = require('express');
+const bot = require('./bot');
 
-  if (ctx.message.photo) {
-    fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
-  } else if (ctx.message.video) {
-    fileId = ctx.message.video.file_id;
-  } else if (ctx.message.document) {
-    fileId = ctx.message.document.file_id;
-  }
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-  if (fileId) {
-    const link = await ctx.telegram.getFileLink(fileId);
-    await ctx.reply(`لینک دانلود فایل شما:\n${link.href}`);
-  } else {
-    await ctx.reply('لطفا فایل ارسال کنید.');
-  }
+bot.launch();
+console.log('🤖 ربات راه‌اندازی شد');
+
+app.get('/', (req, res) => {
+  res.send('ربات فعال است.');
+});
+
+app.listen(PORT, () => {
+  console.log(`🌐 سرور روی پورت ${PORT} در حال اجراست.`);
 });
