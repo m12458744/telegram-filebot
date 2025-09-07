@@ -3,23 +3,69 @@ const { Telegraf, Markup } = require('telegraf');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// پیام شروع و دکمه‌ها
+const recentFiles = []; // برای نمونه لینک‌های ذخیره شده
+
+// منوی اصلی
+const mainMenu = Markup.inlineKeyboard([
+  [Markup.button.callback('📤 ارسال فایل', 'send_file')],
+  [Markup.button.callback('📂 فایل‌های اخیر', 'recent_files')],
+  [Markup.button.callback('ℹ️ راهنما', 'help')],
+  [Markup.button.callback('🛠 تنظیمات', 'settings')],
+  [Markup.button.callback('📢 اخبار و اطلاعیه‌ها', 'news')],
+  [Markup.button.callback('💬 ارتباط با پشتیبانی', 'support')],
+  [Markup.button.callback('❌ خروج', 'exit')]
+]);
+
+// پیام شروع
 bot.start((ctx) => {
   ctx.reply(
-    'سلام 👋\nبه ربات تبدیل فایل به لینک خوش آمدید!\nلطفاً فایل، عکس یا ویدیو ارسال کنید یا از کانال/گروه فوروارد کنید.',
-    Markup.keyboard([
-      ['📤 ارسال فایل'],
-      ['ℹ️ راهنما']
-    ]).resize()
+    'سلام 👋\nبه ربات تبدیل فایل به لینک خوش آمدید! لطفاً یکی از گزینه‌های زیر را انتخاب کنید.',
+    mainMenu
   );
 });
 
-// راهنما
-bot.hears('ℹ️ راهنما', (ctx) => {
+// پاسخ به کلیک روی منوها
+bot.action('send_file', (ctx) => {
+  ctx.answerCbQuery();
+  ctx.reply('لطفاً فایل، عکس یا ویدیو خود را ارسال کنید.');
+});
+
+bot.action('recent_files', (ctx) => {
+  ctx.answerCbQuery();
+  if (recentFiles.length === 0) {
+    ctx.reply('📂 هنوز فایل ارسالی ندارید.');
+  } else {
+    const list = recentFiles.map((item, i) => `${i + 1}. [لینک فایل](${item})`).join('\n');
+    ctx.replyWithMarkdown(`📂 فایل‌های اخیر شما:\n${list}`);
+  }
+});
+
+bot.action('help', (ctx) => {
+  ctx.answerCbQuery();
   ctx.reply('📌 فایل یا عکس یا ویدیو ارسال کن یا از کانال/گروه فوروارد کن تا لینک مستقیم دریافت کنی.');
 });
 
-// هندلر فایل‌ها (عکس، ویدیو، داکیومنت)
+bot.action('settings', (ctx) => {
+  ctx.answerCbQuery();
+  ctx.reply('⚙️ تنظیمات در این نسخه محدود است. به زودی قابلیت‌های بیشتری اضافه خواهد شد.');
+});
+
+bot.action('news', (ctx) => {
+  ctx.answerCbQuery();
+  ctx.reply('📢 اینجا می‌توانید آخرین اخبار و اطلاعیه‌های ربات را مشاهده کنید. فعلاً خبری نیست!');
+});
+
+bot.action('support', (ctx) => {
+  ctx.answerCbQuery();
+  ctx.reply('💬 برای ارتباط با پشتیبانی لطفاً به @YourSupportUsername پیام دهید.');
+});
+
+bot.action('exit', (ctx) => {
+  ctx.answerCbQuery();
+  ctx.reply('👋 خداحافظ! هر زمان خواستی دوباره از /start استفاده کن.');
+});
+
+// هندلر دریافت فایل‌ها
 bot.on(['document', 'photo', 'video'], async (ctx) => {
   try {
     let fileId;
@@ -39,6 +85,11 @@ bot.on(['document', 'photo', 'video'], async (ctx) => {
 
     if (fileId) {
       const fileLink = await ctx.telegram.getFileLink(fileId);
+
+      // ذخیره لینک در آرایه recentFiles
+      recentFiles.unshift(fileLink.href);
+      if (recentFiles.length > 10) recentFiles.pop();
+
       if (isPhotoFile) {
         ctx.reply(`✅ عکس به صورت فایل دریافت شد.\n🔗 لینک مستقیم:\n${fileLink.href}`);
       } else {
@@ -60,4 +111,6 @@ bot.on('message', (ctx) => {
   }
 });
 
-module.exports = bot;
+bot.launch().then(() => {
+  console.log('🤖 ربات با موفقیت راه‌اندازی شد');
+});
