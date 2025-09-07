@@ -1,16 +1,9 @@
-const express = require('express');
+require('dotenv').config();
 const bot = require('./bot');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+bot.launch()
+  .then(() => console.log('ربات با موفقیت راه‌اندازی شد!'))
+  .catch(err => console.error('خطا در راه‌اندازی ربات:', err));
 
-bot.launch();
-console.log('🤖 ربات راه‌اندازی شد');
-
-app.get('/', (req, res) => {
-  res.send('ربات فعال است.');
-});
-
-app.listen(PORT, () => {
-  console.log(`🌐 سرور روی پورت ${PORT} در حال اجراست.`);
-});
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
