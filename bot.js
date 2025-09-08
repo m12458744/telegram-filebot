@@ -1,7 +1,5 @@
 const axios = require('axios');
 const FormData = require('form-data');
-const fs = require('fs');
-const path = require('path');
 
 bot.on(['document', 'photo', 'video'], async (ctx) => {
   try {
@@ -9,25 +7,31 @@ bot.on(['document', 'photo', 'video'], async (ctx) => {
     if (!fileId) return ctx.reply('❌ فایل دریافت نشد');
 
     const fileLink = await ctx.telegram.getFileLink(fileId);
-    const response = await axios.get(fileLink.href, { responseType: 'stream' });
+
+    // دانلود فایل با timeout طولانی (5 دقیقه)
+    const response = await axios.get(fileLink.href, { responseType: 'stream', timeout: 300000 });
 
     const form = new FormData();
     form.append('file', response.data, {
       filename: 'file_' + Date.now()
     });
 
-    const uploadRes = await axios.post('https://otpbale.freehost.io/api/upload.php', form, {
-      headers: form.getHeaders()
+    // آپلود فایل با تنظیمات مناسب حجم و timeout
+    const uploadRes = await axios.post('https://otpbale.freehost.io/uploads/upload.php', form, {
+      headers: form.getHeaders(),
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+      timeout: 300000
     });
 
-    const uploadedUrl = uploadRes.data?.url;
-    if (uploadedUrl) {
-      ctx.reply(`✅ فایل شما دریافت شد.\n🔗 لینک مستقیم:\n${uploadedUrl}`);
+    if (uploadRes.data?.url) {
+      ctx.reply(`✅ فایل شما دریافت شد.\n🔗 لینک مستقیم:\n${uploadRes.data.url}`);
     } else {
+      console.error('Upload failed response:', uploadRes.data);
       ctx.reply('❌ خطا در آپلود فایل');
     }
   } catch (err) {
-    console.error('خطا:', err.message);
+    console.error('Upload error:', err.response?.data || err.message);
     ctx.reply('❌ دریافت یا آپلود فایل با خطا مواجه شد.');
   }
 });
