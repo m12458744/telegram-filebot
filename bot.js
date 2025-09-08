@@ -3,28 +3,25 @@ const { Telegraf, Markup } = require('telegraf');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-const recentFiles = []; // برای نمونه لینک‌های ذخیره شده
+const recentFiles = []; // آرایه برای ذخیره لینک‌های اخیر
 
-// منوی اصلی
-const mainMenu = Markup.inlineKeyboard([
-  [Markup.button.callback('📤 ارسال فایل', 'send_file')],
-  [Markup.button.callback('📂 فایل‌های اخیر', 'recent_files')],
-  [Markup.button.callback('ℹ️ راهنما', 'help')],
-  [Markup.button.callback('🛠 تنظیمات', 'settings')],
-  [Markup.button.callback('📢 اخبار و اطلاعیه‌ها', 'news')],
-  [Markup.button.callback('💬 ارتباط با پشتیبانی', 'support')],
-  [Markup.button.callback('❌ خروج', 'exit')]
-]);
-
-// پیام شروع
+// وقتی کاربر دستور /start می‌دهد، منوی اصلی ارسال می‌شود
 bot.start((ctx) => {
   ctx.reply(
     'سلام 👋\nبه ربات تبدیل فایل به لینک خوش آمدید! لطفاً یکی از گزینه‌های زیر را انتخاب کنید.',
-    mainMenu
+    Markup.inlineKeyboard([
+      [Markup.button.callback('📤 ارسال فایل', 'send_file')],
+      [Markup.button.callback('📂 فایل‌های اخیر', 'recent_files')],
+      [Markup.button.callback('ℹ️ راهنما', 'help')],
+      [Markup.button.callback('🛠 تنظیمات', 'settings')],
+      [Markup.button.callback('📢 اخبار و اطلاعیه‌ها', 'news')],
+      [Markup.button.callback('💬 ارتباط با پشتیبانی', 'support')],
+      [Markup.button.callback('❌ خروج', 'exit')]
+    ])
   );
 });
 
-// پاسخ به کلیک روی منوها
+// پاسخ به دکمه‌ها
 bot.action('send_file', (ctx) => {
   ctx.answerCbQuery();
   ctx.reply('لطفاً فایل، عکس یا ویدیو خود را ارسال کنید.');
@@ -65,7 +62,7 @@ bot.action('exit', (ctx) => {
   ctx.reply('👋 خداحافظ! هر زمان خواستی دوباره از /start استفاده کن.');
 });
 
-// هندلر دریافت فایل‌ها
+// دریافت فایل‌ها و ارسال لینک مستقیم
 bot.on(['document', 'photo', 'video'], async (ctx) => {
   try {
     let fileId;
@@ -86,7 +83,6 @@ bot.on(['document', 'photo', 'video'], async (ctx) => {
     if (fileId) {
       const fileLink = await ctx.telegram.getFileLink(fileId);
 
-      // ذخیره لینک در آرایه recentFiles
       recentFiles.unshift(fileLink.href);
       if (recentFiles.length > 10) recentFiles.pop();
 
@@ -104,12 +100,11 @@ bot.on(['document', 'photo', 'video'], async (ctx) => {
   }
 });
 
-// پیام‌های متنی بدون فایل
+// اگر پیام متنی بدون فایل بود به کاربر اطلاع بده
 bot.on('message', (ctx) => {
   if (!ctx.message.document && !ctx.message.photo && !ctx.message.video) {
     ctx.reply('⚠️ لطفاً فقط فایل، عکس یا ویدیو ارسال کن یا فوروارد کن.');
   }
 });
 
-// **فقط صادر کردن شی bot، بدون اجرای launch**
 module.exports = bot;
