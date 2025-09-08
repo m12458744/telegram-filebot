@@ -1,3 +1,10 @@
+const { Telegraf } = require('telegraf');
+require('dotenv').config();
+
+const bot = new Telegraf(process.env.BOT_TOKEN);  // توکن ربات را از .env بخوان
+
+// سپس هندلرهای ربات را تعریف کن
+
 const axios = require('axios');
 const FormData = require('form-data');
 
@@ -7,8 +14,6 @@ bot.on(['document', 'photo', 'video'], async (ctx) => {
     if (!fileId) return ctx.reply('❌ فایل دریافت نشد');
 
     const fileLink = await ctx.telegram.getFileLink(fileId);
-
-    // دانلود فایل با timeout طولانی (5 دقیقه)
     const response = await axios.get(fileLink.href, { responseType: 'stream', timeout: 300000 });
 
     const form = new FormData();
@@ -16,7 +21,6 @@ bot.on(['document', 'photo', 'video'], async (ctx) => {
       filename: 'file_' + Date.now()
     });
 
-    // آپلود فایل با تنظیمات مناسب حجم و timeout
     const uploadRes = await axios.post('https://otpbale.freehost.io/uploads/upload.php', form, {
       headers: form.getHeaders(),
       maxContentLength: Infinity,
@@ -27,7 +31,6 @@ bot.on(['document', 'photo', 'video'], async (ctx) => {
     if (uploadRes.data?.url) {
       ctx.reply(`✅ فایل شما دریافت شد.\n🔗 لینک مستقیم:\n${uploadRes.data.url}`);
     } else {
-      console.error('Upload failed response:', uploadRes.data);
       ctx.reply('❌ خطا در آپلود فایل');
     }
   } catch (err) {
@@ -35,3 +38,5 @@ bot.on(['document', 'photo', 'video'], async (ctx) => {
     ctx.reply('❌ دریافت یا آپلود فایل با خطا مواجه شد.');
   }
 });
+
+module.exports = bot;
